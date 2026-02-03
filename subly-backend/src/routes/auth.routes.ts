@@ -7,7 +7,6 @@ import isAuthenticated from "../middleware/jwt.middleware";
 const router = Router();
 const saltRounds = 10;
 
-// POST /auth/signup
 router.post("/signup", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
@@ -29,10 +28,18 @@ router.post("/signup", async (req: Request, res: Response, next: NextFunction) =
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword },
+      data: {
+        email,
+        password: hashedPassword,
+      },
     });
 
-    res.status(201).json({ user: { email: user.email, id: user.id } });
+    res.status(201).json({
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -57,7 +64,11 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
       return res.status(401).json({ message: "Incorrect password" });
     }
 
-    const payload = { id: user.id, email: user.email };
+    const payload = {
+      id: user.id,
+      email: user.email,
+    };
+
     const authToken = jwt.sign(payload, process.env.TOKEN_SECRET!, {
       algorithm: "HS256",
       expiresIn: "6h",
@@ -69,7 +80,7 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
   }
 });
 
-// GET /auth/verify
+
 router.get("/verify", isAuthenticated, (req: Request, res: Response) => {
   res.status(200).json(req.auth);
 });
