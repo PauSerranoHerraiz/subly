@@ -7,45 +7,42 @@ import isAuthenticated from "../middleware/jwt.middleware";
 const router = Router();
 const saltRounds = 10;
 
-router.post("/signup", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { email, password } = req.body;
+router.post("/signup", async (req: Request, res: Response) => {
+  const { email, password, companyName } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Provide email and password" });
-    }
+  if (!email || !password || !companyName)
+    return res.status(400).json({ message: "Provide email, password, companyName" });
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Provide a valid email address" });
-    }
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) return res.status(400).json({ message: "User already exists" });
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
+  const company = await prisma.company.create({
+    data: {
+      name: companyName,
+      users: {
+        create: {
+          email,
+          password: hashedPassword,
+          role: "ADMIN",
+        },
       },
-    });
+    },
+    include: { users: true },
+  });
 
-    res.status(201).json({
-      user: {
-        id: user.id,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
+  const user = company.users[0];
+  const token = jwt.sign(
+    { id: user.id, email: user.email, role: user.role, companyId: company.id },
+    process.env.TOKEN_SECRET!,
+    { algorithm: "HS256", expiresIn: "6h" }
+  );
+
+  res.status(201).json({ authToken: token, user: { id: user.id, email: user.email, role: user.role, companyId: company.id } });
 });
 
-// POST /auth/login
+
 router.post("/login", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
@@ -67,6 +64,8 @@ router.post("/login", async (req: Request, res: Response, next: NextFunction) =>
     const payload = {
       id: user.id,
       email: user.email,
+      role: user.role,
+      companyId: user.companyId,
     };
 
     const authToken = jwt.sign(payload, process.env.TOKEN_SECRET!, {
