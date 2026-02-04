@@ -1,92 +1,73 @@
-import { Router, Request, Response } from "express";
+import { Router, type Request, type Response } from "express";
 import prisma from "../lib/prisma";
-import isAuthenticated from "../middleware/jwt.middleware";
 
 const router = Router();
-router.use(isAuthenticated);
 
-// GET /customers
 router.get("/", async (req: Request, res: Response) => {
-  const customers = await prisma.customer.findMany({
-    where: {
-      companyId: req.auth!.companyId,
-    },
-  });
+  console.log("\n=== GET /customers ===");
+  console.log("req.auth:", req.auth);
 
-  res.json(customers);
+  try {
+    if (!req.auth) {
+      console.log("❌ No auth object");
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const { companyId } = req.auth;
+
+    if (!companyId) {
+      console.log("❌ No companyId in token");
+      return res.status(401).json({ message: "No companyId in token" });
+    }
+
+    const customers = await prisma.customer.findMany({
+      where: { companyId },
+      include: { subscription: true },
+    });
+
+    console.log("✅ Customers found:", customers.length);
+    res.json(customers);
+  } catch (error: any) {
+    console.error("❌ ERROR:", error.message);
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// POST /customers
 router.post("/", async (req: Request, res: Response) => {
-  const { name, email, companyName, phone } = req.body;
+  try {
+    const { name, email, companyName, phone } = req.body;
+    const companyId = req.auth!.companyId;
 
-  const customer = await prisma.customer.create({
-    data: {
-      name,
-      email,
-      companyName,
-      phone,
-      companyId: req.auth!.companyId,
-    },
-  });
+    const customer = await prisma.customer.create({
+      data: { name, email, companyName, phone, companyId },
+    });
 
-  res.status(201).json(customer);
-});
-
-// GET /customers/:id
-router.get("/:id", async (req: Request, res: Response) => {
-  const customer = await prisma.customer.findFirst({
-    where: {
-      id: req.params.id,
-      companyId: req.auth!.companyId,
-    },
-  });
-
-  if (!customer) {
-    return res.status(404).json({ message: "Customer not found" });
+    res.status(201).json(customer);
+  } catch (error: any) {
+    console.error("❌ Create customer error:", error);
+    res.status(500).json({ message: error.message });
   }
-
-  res.json(customer);
 });
 
-// PUT /customers/:id
-router.put("/:id", async (req: Request, res: Response) => {
-  const { name, email, companyName, phone } = req.body;
-
-  const updated = await prisma.customer.updateMany({
-    where: {
-      id: req.params.id,
-      companyId: req.auth!.companyId,
-    },
-    data: {
-      name,
-      email,
-      companyName,
-      phone,
-    },
-  });
-
-  if (updated.count === 0) {
-    return res.status(404).json({ message: "Customer not found" });
-  }
-
-  res.json({ message: "Customer updated" });
-});
-
-// DELETE /customers/:id
 router.delete("/:id", async (req: Request, res: Response) => {
-  const deleted = await prisma.customer.deleteMany({
-    where: {
-      id: req.params.id,
-      companyId: req.auth!.companyId,
-    },
-  });
+  try {
+    const { id } = req.params;
+    const companyId = req.auth!.companyId;
 
-  if (deleted.count === 0) {
-    return res.status(404).json({ message: "Customer not found" });
+    const customer = await prisma.customer.findFirst({
+      where: { id, companyId },
+    });
+
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    await prisma.customer.delete({ where: { id } });
+    res.json({ message: "Customer deleted" });
+  } catch (error: any) {
+    console.error("❌ Delete customer error:", error);
+    res.status(500).json({ message: error.message });
   }
-
-  res.json({ message: "Customer deleted" });
 });
 
 export default router;

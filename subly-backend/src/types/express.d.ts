@@ -6,11 +6,11 @@ declare global {
       auth?: {
         id: string;
         email: string;
-        role: "ADMIN" | "MEMBER";
+        role: string;
         companyId: string;
-        iat?: number;
-        exp?: number;
       };
     }
   }
 }
+
+export {};

@@ -1,14 +1,21 @@
 import { expressjwt } from "express-jwt";
-import { Request } from "express";
+import { type Request } from "express";
 
 const isAuthenticated = expressjwt({
   secret: process.env.TOKEN_SECRET!,
   algorithms: ["HS256"],
-  requestProperty: "payload",
+  requestProperty: "auth",
   getToken: (req: Request) => {
-    if (req.headers.authorization?.split(" ")[0] === "Bearer") {
-      return req.headers.authorization.split(" ")[1];
+    const authHeader = req.headers.authorization;
+    console.log("🔐 Authorization header:", authHeader);
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      console.log("✅ Token extracted:", token.substring(0, 20) + "...");
+      return token;
     }
+
+    console.log("❌ No token found");
     return undefined;
   },
 });

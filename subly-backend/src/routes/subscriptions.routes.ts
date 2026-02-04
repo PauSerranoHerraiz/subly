@@ -1,71 +1,123 @@
-import { Router, Request, Response } from "express";
+import { Router, type Request, type Response } from "express";
 import prisma from "../lib/prisma";
-import isAuthenticated from "../middleware/jwt.middleware";
 
 const router = Router();
-router.use(isAuthenticated);
 
-router.get("/", async (req: Request, res: Response) => {
-  const subscriptions = await prisma.subscription.findMany({
-    where: {
-      customer: { companyId: req.auth!.companyId },
-    },
-    include: { customer: true, plan: true },
-  });
+console.log("🔥 subscriptions.routes.ts loaded!");
 
-  res.json(subscriptions);
-});
-
+// POST /subscriptions
 router.post("/", async (req: Request, res: Response) => {
-  const { customerId, planId } = req.body;
+  console.log("\n=== POST /subscriptions START ===");
+  console.log("Body:", req.body);
+  console.log("Auth:", req.auth);
 
-  // Validar que el cliente pertenece al usuario
-  const customer = await prisma.customer.findFirst({
-    where: { id: customerId, userId: req.auth!.id },
-  });
-  if (!customer) return res.status(404).json({ message: "Customer not found" });
+  try {
+    const { customerId, planId } = req.body;
+    const companyId = req.auth!.companyId;
 
-  const subscription = await prisma.subscription.create({
-    data: {
-      customerId,
-      planId,
-      status: "ACTIVE",
-    },
-  });
+    console.log("Looking for customer:", customerId);
+    console.log("In company:", companyId);
 
-  res.status(201).json(subscription);
+    const customer = await prisma.customer.findFirst({
+      where: { id: customerId, companyId },
+    });
+
+    console.log("Customer found?", customer ? "✅ YES" : "❌ NO");
+
+    if (!customer) {
+      console.log("❌ Returning 404");
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    const plan = await prisma.plan.findUnique({
+      where: { id: planId },
+    });
+
+    if (!plan) {
+      return res.status(404).json({ message: "Plan not found" });
+    }
+
+    const subscription = await prisma.subscription.create({
+      data: {
+        customerId,
+        planId,
+        status: "ACTIVE",
+        startedAt: new Date(), 
+      },
+      include: {
+        customer: true,
+        plan: true,
+      },
+    });
+
+    console.log("✅ Subscription created:", subscription.id);
+    res.status(201).json(subscription);
+  } catch (error: any) {
+    console.error("❌ Error:", error.message);
+    res.status(500).json({ message: error.message });
+  }
 });
 
-router.put("/:id", async (req: Request, res: Response) => {
-  const { planId, status } = req.body;
-
-  const subscription = await prisma.subscription.findUnique({
-    where: { id: req.params.id },
-    include: { customer: true },
-  });
-
-  if (!subscription || subscription.customer.userId !== req.auth!.id)
-    return res.status(404).json({ message: "Subscription not found" });
-
-  const updated = await prisma.subscription.update({
-    where: { id: req.params.id },
-    data: { planId, status },
-  });
-
-  res.json(updated);
+// GET /subscriptions
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const companyId = req.auth!.companyId;
+    const subscriptions = await prisma.subscription.findMany({
+      where: { customer: { companyId } },
+      include: { customer: true, plan: true },
+    });
+    res.json(subscriptions);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
+// PATCH /subscriptions/:id
+router.patch("/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { planId, status } = req.body;
+    const companyId = req.auth!.companyId;
+
+    const subscription = await prisma.subscription.findFirst({
+      where: { id, customer: { companyId } },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ message: "Subscription not found" });
+    }
+
+    const updated = await prisma.subscription.update({
+      where: { id },
+      data: { planId, status },
+      include: { customer: true, plan: true },
+    });
+
+    res.json(updated);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// DELETE /subscriptions/:id
 router.delete("/:id", async (req: Request, res: Response) => {
-  const subscription = await prisma.subscription.findUnique({
-    where: { id: req.params.id },
-    include: { customer: true },
-  });
+  try {
+    const { id } = req.params;
+    const companyId = req.auth!.companyId;
 
-  if (!subscription || subscription.customer.userId !== req.auth!.id)
-    return res.status(404).json({ message: "Subscription not found" });
+    const subscription = await prisma.subscription.findFirst({
+      where: { id, customer: { companyId } },
+    });
 
-  await prisma.subscription.delete({ where: { id: req.params.id } });
-  res.json({ message: "Subscription deleted" });
+    if (!subscription) {
+      return res.status(404).json({ message: "Subscription not found" });
+    }
+
+    await prisma.subscription.delete({ where: { id } });
+    res.json({ message: "Subscription deleted" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export default router;
