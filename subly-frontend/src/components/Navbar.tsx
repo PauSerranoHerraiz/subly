@@ -27,7 +27,7 @@ export default function Navbar() {
     <nav className="bg-gray-800 border-b border-gray-700 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
         <div className="flex justify-between h-16 items-center">
-          <Link to="/" className="flex items-center">
+          <Link to="/dashboard" className="flex items-center">
             <img src="/subly-navbar.svg" alt="Subly" className="h-10" />
           </Link>
 
