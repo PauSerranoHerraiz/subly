@@ -7,7 +7,6 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const companyId = req.auth!.companyId;
 
-    // Obtener customers, plans y subscriptions de la company
     const [customers, plans, subscriptions] = await Promise.all([
       prisma.customer.findMany({
         where: { companyId },

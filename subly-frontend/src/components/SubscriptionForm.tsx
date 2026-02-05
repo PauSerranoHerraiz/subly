@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { getCustomers } from "../api/customers";
 import { getPlans } from "../api/plans";
 
+type Option = { id: string; name: string; email?: string; priceMonthly?: number };
+
 export default function SubscriptionForm({ onCreate }: any) {
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [plans, setPlans] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<Option[]>([]);
+  const [plans, setPlans] = useState<Option[]>([]);
   const [customerId, setCustomerId] = useState("");
   const [planId, setPlanId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -18,14 +20,13 @@ export default function SubscriptionForm({ onCreate }: any) {
           getCustomers(),
           getPlans(),
         ]);
+
         setCustomers(customersData);
         setPlans(plansData);
 
-        // Auto-seleccionar el primer customer y plan
         if (customersData.length > 0) setCustomerId(customersData[0].id);
         if (plansData.length > 0) setPlanId(plansData[0].id);
       } catch (err: any) {
-        console.error("Error loading data:", err);
         setError(err.response?.data?.message || "Failed to load data");
       } finally {
         setLoading(false);
@@ -35,70 +36,85 @@ export default function SubscriptionForm({ onCreate }: any) {
   }, []);
 
   const submit = async () => {
-    if (!customerId || !planId) {
-      alert("Please select both customer and plan");
-      return;
-    }
+    if (!customerId || !planId) return;
 
     try {
       await onCreate({ customerId, planId });
-      alert("Subscription created successfully!");
+      setCustomerId(customers[0]?.id || "");
+      setPlanId(plans[0]?.id || "");
     } catch (err: any) {
-      console.error("Error creating subscription:", err);
       alert(err.response?.data?.message || "Failed to create subscription");
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
-
-  if (customers.length === 0) {
+  if (loading) {
     return (
-      <div>
-        <h3>Create Subscription</h3>
-        <p>⚠️ No customers found. Please create a customer first in the Customers page.</p>
+      <div className="text-gray-400">
+        Loading subscription data…
       </div>
     );
   }
 
-  if (plans.length === 0) {
+  if (error) {
+    return (
+      <div className="bg-red-500/10 border border-red-500 text-red-400 rounded-lg p-4">
+        {error}
+      </div>
+    );
+  }
+
+  if (customers.length === 0 || plans.length === 0) {
     return (
       <div>
-        <h3>Create Subscription</h3>
-        <p>⚠️ No plans found. Please create a plan first in the Plans page.</p>
+        <p className="text-gray-400">
+          {customers.length === 0
+            ? "You need at least one customer before creating subscriptions."
+            : "You need at least one plan before creating subscriptions."}
+        </p>
       </div>
     );
   }
 
   return (
     <div>
-      <h3>Create Subscription</h3>
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Customer</label>
+          <select
+            value={customerId}
+            onChange={(e) => setCustomerId(e.target.value)}
+            className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
+          >
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} {c.email && `— ${c.email}`}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <label>
-        Customer:
-        <select value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
-          <option value="">Select customer...</option>
-          {customers.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} - {c.email}
-            </option>
-          ))}
-        </select>
-      </label>
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Plan</label>
+          <select
+            value={planId}
+            onChange={(e) => setPlanId(e.target.value)}
+            className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
+          >
+            {plans.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} — €{((p.priceMonthly || 0) / 100).toFixed(2)}/mo
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <label>
-        Plan:
-        <select value={planId} onChange={(e) => setPlanId(e.target.value)}>
-          <option value="">Select plan...</option>
-          {plans.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} - ${p.priceMonthly}/month
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <button onClick={submit}>Create Subscription</button>
+        <button
+          onClick={submit}
+          className="w-full bg-lime-500 hover:bg-lime-400 text-gray-900 font-semibold py-2 rounded-lg transition"
+        >
+          Create subscription
+        </button>
+      </div>
     </div>
   );
 }

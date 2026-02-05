@@ -4,7 +4,6 @@ import prisma from "../lib/prisma";
 
 const router = Router();
 
-// POST /auth/login
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -33,14 +32,13 @@ router.post("/login", async (req: Request, res: Response) => {
 
     console.log("✅ Token generated:", token.substring(0, 20) + "...");
 
-    res.json({ token }); // ✅ Cambio de authToken a token
+    res.json({ token }); 
   } catch (error: any) {
     console.error("❌ Login error:", error.message);
     res.status(500).json({ message: error.message });
   }
 });
 
-// POST /auth/signup
 router.post("/signup", async (req: Request, res: Response) => {
   try {
     const { email, password, role = "MEMBER" } = req.body;
@@ -55,7 +53,6 @@ router.post("/signup", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // Crear una company para este usuario
     const company = await prisma.company.create({
       data: { name: `Company of ${email}` },
     });
@@ -63,7 +60,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     const user = await prisma.user.create({
       data: {
         email,
-        password, // En producción, hashea esto
+        password, 
         role,
         companyId: company.id,
       },

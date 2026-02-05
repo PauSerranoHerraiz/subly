@@ -14,11 +14,9 @@ const app: Application = express();
 
 configMiddleware(app);
 
-// Public routes
 app.use("/api", indexRoutes);
 app.use("/auth", authRoutes);
 
-// Protected routes
 app.use("/customers", isAuthenticated, customersRoutes);
 app.use("/plans", isAuthenticated, plansRoutes);
 app.use("/subscriptions", isAuthenticated, subscriptionsRoutes);

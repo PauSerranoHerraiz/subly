@@ -5,7 +5,6 @@ const router = Router();
 
 console.log("🔥 subscriptions.routes.ts loaded!");
 
-// POST /subscriptions
 router.post("/", async (req: Request, res: Response) => {
   console.log("\n=== POST /subscriptions START ===");
   console.log("Body:", req.body);
@@ -58,7 +57,6 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-// GET /subscriptions
 router.get("/", async (req: Request, res: Response) => {
   try {
     const companyId = req.auth!.companyId;
@@ -72,7 +70,6 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-// PATCH /subscriptions/:id
 router.patch("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -99,7 +96,6 @@ router.patch("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// DELETE /subscriptions/:id
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

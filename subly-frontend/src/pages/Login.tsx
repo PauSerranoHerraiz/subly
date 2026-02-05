@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
 
 export default function Login() {
@@ -13,61 +13,88 @@ export default function Login() {
     setError(null);
 
     try {
-      console.log("🔐 Sending login request...");
       const response = await api.post("/auth/login", { email, password });
-
-      console.log("📦 Response data:", response.data);
-
-      // ✅ Aquí está el cambio - busca authToken primero
       const token = response.data.authToken || response.data.token;
 
       if (!token) {
-        console.error("❌ No token in response:", response.data);
         throw new Error("No token received from server");
       }
 
-      console.log("✅ Login successful");
-      console.log("📝 Token:", token.substring(0, 20) + "...");
-
       localStorage.setItem("token", token);
-      console.log("✅ Token saved to localStorage");
-
       navigate("/dashboard");
     } catch (err: any) {
-      console.error("❌ Login error:", err.message);
       setError(err.response?.data?.message || err.message || "Login failed");
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto" }}>
-      <h1>Login</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <div className="w-full max-w-md bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white">
+            Subly
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Sign in to your dashboard
+          </p>
         </div>
-        <div>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
-          />
-        </div>
-        <button type="submit" style={{ width: "100%", padding: "10px" }}>
-          Login
-        </button>
-      </form>
+
+        {error && (
+          <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+              className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700
+                         focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700
+                         focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-lime-500 hover:bg-lime-400 text-gray-900 font-semibold py-3 rounded-lg transition
+                       shadow-[0_0_20px_rgba(163,230,53,0.25)]"
+          >
+            Sign in
+          </button>
+        </form>
+
+        <p className="text-gray-400 text-center mt-6 text-sm">
+          Don't have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-lime-400 hover:text-lime-300 font-medium"
+          >
+            Sign up
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

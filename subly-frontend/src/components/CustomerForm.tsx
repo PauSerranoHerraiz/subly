@@ -1,6 +1,10 @@
 import { useState } from "react";
 
-export default function CustomerForm({ onCreate }: any) {
+type CustomerFormProps = {
+  onCreate: (data: { name: string; email: string; companyName: string; phone: string }) => void;
+};
+
+export default function CustomerForm({ onCreate }: CustomerFormProps) {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -14,15 +18,42 @@ export default function CustomerForm({ onCreate }: any) {
   };
 
   return (
-    <div>
-      <h3>New customer</h3>
+    <div className="bg-gray-800 p-6 rounded-xl shadow-md max-w-md mb-6">
+      <h3 className="text-xl font-bold text-white mb-4">New Customer</h3>
 
-      <input placeholder="Name" onChange={e => setForm({ ...form, name: e.target.value })} />
-      <input placeholder="Email" onChange={e => setForm({ ...form, email: e.target.value })} />
-      <input placeholder="Company" onChange={e => setForm({ ...form, companyName: e.target.value })} />
-      <input placeholder="Phone" onChange={e => setForm({ ...form, phone: e.target.value })} />
+      <div className="flex flex-col gap-3">
+        <input
+          placeholder="Name"
+          value={form.name}
+          onChange={e => setForm({ ...form, name: e.target.value })}
+          className="p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 transition"
+        />
+        <input
+          placeholder="Email"
+          value={form.email}
+          onChange={e => setForm({ ...form, email: e.target.value })}
+          className="p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 transition"
+        />
+        <input
+          placeholder="Company"
+          value={form.companyName}
+          onChange={e => setForm({ ...form, companyName: e.target.value })}
+          className="p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 transition"
+        />
+        <input
+          placeholder="Phone"
+          value={form.phone}
+          onChange={e => setForm({ ...form, phone: e.target.value })}
+          className="p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400 transition"
+        />
+      </div>
 
-      <button onClick={submit}>Create</button>
+      <button
+        onClick={submit}
+        className="mt-4 w-full py-3 bg-lime-500 text-gray-900 font-semibold rounded-lg hover:bg-lime-400 transition"
+      >
+        Create
+      </button>
     </div>
   );
 }
