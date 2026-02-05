@@ -6,6 +6,8 @@ npm-debug.log
 
 # Environment Variables should NEVER be published
 .env
+.env.local
+.env.production
 
 # macOS
 .DS_Store
@@ -23,3 +25,6 @@ ehthumbs.db
 .vscode/*
 
 /generated/prisma
+
+# Build directories
+dist

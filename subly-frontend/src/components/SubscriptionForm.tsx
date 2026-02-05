@@ -4,13 +4,14 @@ import { getPlans } from "../api/plans";
 
 type Option = { id: string; name: string; email?: string; priceMonthly?: number };
 
-export default function SubscriptionForm({ onCreate }: any) {
+export default function SubscriptionForm({ onCreate }: { onCreate: (data: { customerId: string; planId: string }) => Promise<void> }) {
   const [customers, setCustomers] = useState<Option[]>([]);
   const [plans, setPlans] = useState<Option[]>([]);
   const [customerId, setCustomerId] = useState("");
   const [planId, setPlanId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -37,13 +38,13 @@ export default function SubscriptionForm({ onCreate }: any) {
 
   const submit = async () => {
     if (!customerId || !planId) return;
-
+    setSubmitting(true);
     try {
       await onCreate({ customerId, planId });
       setCustomerId(customers[0]?.id || "");
       setPlanId(plans[0]?.id || "");
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to create subscription");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -110,9 +111,10 @@ export default function SubscriptionForm({ onCreate }: any) {
 
         <button
           onClick={submit}
-          className="w-full bg-lime-500 hover:bg-lime-400 text-gray-900 font-semibold py-2 rounded-lg transition"
+          disabled={submitting}
+          className="w-full bg-lime-500 hover:bg-lime-400 text-gray-900 font-semibold py-2 rounded-lg transition disabled:opacity-60"
         >
-          Create subscription
+          {submitting ? "Creating..." : "Create subscription"}
         </button>
       </div>
     </div>

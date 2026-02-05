@@ -6,17 +6,12 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    
-    console.log("📤 Sending request with token:", token ? "✅ exists" : "❌ missing");
-    
+    const token = localStorage.getItem("authToken");
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("✅ Token added to header");
-    } else {
-      console.warn("⚠️ No token found in localStorage");
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -25,14 +20,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("📥 Response error:", error.response?.status, error.response?.data);
-    
     if (error.response?.status === 401) {
-      console.log("🔓 Token expired or invalid, redirecting to login...");
-      localStorage.removeItem("token");
+      localStorage.removeItem("authToken");
       window.location.href = "/login";
     }
-    
+
+    if (error.response?.status === 429) {
+      alert("Too many requests. Please try again in a moment.");
+    }
+
     return Promise.reject(error);
   }
 );

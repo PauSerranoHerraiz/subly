@@ -121,8 +121,11 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
-            {data.subscriptions.map((sub) => (
-              <tr key={sub.id} className="hover:bg-gray-700/40 transition">
+            {data.subscriptions.map((sub, idx) => (
+              <tr
+                key={sub.id}
+                className={`transition ${idx % 2 === 0 ? "bg-gray-800/40" : "bg-gray-800/10"} hover:bg-gray-700/40`}
+              >
                 <td className="px-6 py-4 text-sm text-white">{sub.customer.name}</td>
                 <td className="px-6 py-4 text-sm text-gray-300">{sub.plan.name}</td>
                 <td className="px-6 py-4">

@@ -6,11 +6,13 @@ import {
 } from "../api/customers";
 import CustomerForm from "../components/CustomerForm";
 import CustomerList from "../components/CustomerList";
+import { useToast } from "../components/ToastProvider";
 
 export default function Customers() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const load = async () => {
     try {
@@ -33,10 +35,10 @@ export default function Customers() {
   const onCreate = async (data: any) => {
     try {
       await createCustomer(data);
+      addToast("Customer created");
       load();
     } catch (err: any) {
-      console.error("Error creating customer:", err);
-      alert(err.response?.data?.message || "Failed to create customer");
+      addToast("Failed to create customer", "error");
     }
   };
 
@@ -44,9 +46,9 @@ export default function Customers() {
     try {
       await deleteCustomer(id);
       setCustomers((prev) => prev.filter((c) => c.id !== id));
+      addToast("Customer deleted", "info");
     } catch (err: any) {
-      console.error("Error deleting customer:", err);
-      alert(err.response?.data?.message || "Failed to delete customer");
+      addToast("Failed to delete customer", "error");
     }
   };
 

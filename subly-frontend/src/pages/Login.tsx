@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,11 +18,9 @@ export default function Login() {
       const response = await api.post("/auth/login", { email, password });
       const token = response.data.authToken || response.data.token;
 
-      if (!token) {
-        throw new Error("No token received from server");
-      }
+      if (!token) throw new Error("No token received from server");
 
-      localStorage.setItem("token", token);
+      login(token); 
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || "Login failed");

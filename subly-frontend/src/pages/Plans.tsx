@@ -7,10 +7,12 @@ import {
 } from "../api/plans";
 import PlanForm from "../components/PlanForm";
 import PlanList from "../components/PlanList";
+import { useToast } from "../components/ToastProvider";
 
 export default function Plans() {
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { addToast } = useToast();
 
   const load = async () => {
     setLoading(true);
@@ -25,17 +27,20 @@ export default function Plans() {
 
   const onCreate = async (data: any) => {
     await createPlan(data);
+    addToast("Plan created");
     load();
   };
 
   const onUpdate = async (id: string, data: any) => {
     await updatePlan(id, data);
+    addToast("Plan updated");
     load();
   };
 
   const onDelete = async (id: string) => {
     await deletePlan(id);
     setPlans((prev) => prev.filter((p) => p.id !== id));
+    addToast("Plan deleted", "info");
   };
 
   return (

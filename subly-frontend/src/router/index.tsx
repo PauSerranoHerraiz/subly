@@ -1,21 +1,44 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
-import ProtectedRoute from "../auth/ProtectedRoute";
-import ProtectedLayout from "../components/ProtectedLayout";
+import Dashboard from "../pages/Dashboard";
 import Customers from "../pages/Customers";
 import Plans from "../pages/Plans";
 import Subscriptions from "../pages/Subscriptions";
-import Dashboard from "../pages/Dashboard";
+import Landing from "../pages/Landing";
+import About from "../pages/About";
+import ProtectedRoute from "../auth/ProtectedRoute";
+import ProtectedLayout from "../components/ProtectedLayout";
+import PublicLayout from "../components/PublicLayout";
+import NotFound from "../pages/NotFound";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        {/* Public routes with footer */}
+        <Route
+          path="/"
+          element={
+            <PublicLayout>
+              <Landing />
+            </PublicLayout>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <PublicLayout>
+              <About />
+            </PublicLayout>
+          }
+        />
+
+        {/* Auth pages (no footer) */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
+        {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
@@ -56,6 +79,9 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        {/* 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

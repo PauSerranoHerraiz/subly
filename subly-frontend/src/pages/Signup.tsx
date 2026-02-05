@@ -6,6 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -16,18 +17,23 @@ export default function Signup() {
     e.preventDefault();
     setError(null);
 
+    const passwordOk =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/.test(password);
+
+    if (!passwordOk) {
+      setError("Password must be 6+ characters, include 1 uppercase, 1 lowercase and 1 number");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     try {
-      await api.post("/auth/signup", {
-        email,
-        password,
-        companyName,
-      });
+      await api.post("/auth/signup", { email, password, companyName });
 
-      const res = await api.post("/auth/login", {
-        email,
-        password,
-      });
-
+      const res = await api.post("/auth/login", { email, password });
       login(res.data.authToken);
       navigate("/customers");
     } catch (err: any) {
@@ -91,6 +97,21 @@ export default function Signup() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700
+                         focus:outline-none focus:ring-2 focus:ring-lime-400 focus:border-lime-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">
+              Confirm password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               required
               className="w-full px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700
